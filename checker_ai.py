@@ -10,6 +10,19 @@ from graphics import *
 MAXIMUM_DB_SEARCH_TURN = 6 # May increase as more data is collected
 REP_BOARD_DICT = dict()
 
+AI_MULTIPLIERS = {\
+    'moves_available': 1,\
+    'move_num': 1,\
+    'num_pieces_self': 1,\
+    'num_pieces_opp': 1,\
+    'num_kings_self': 1,\
+    'num_kings_opp': 1,\
+    'makes_king': 1.5,\
+    'takes_king': 1.5,\
+    'num_resulting_moves': 0.5,\
+    'self_pieces_threatened': 0.5,\
+    'num_threats': 0.5}
+
 def print_turn_eval(game, board):
     """Print basic info prior to evaluating which move to make."""
     moves_available = len(board.get_legal_moves())
@@ -127,6 +140,7 @@ def eval_move(possible_move, game, board, echo=False):
     """Function to evaluate the probability of a move
     leading to a successful outcome."""
     t_start = time.time()
+    score_multipliers = dict()
     # make a copy of the existing board, and execute the move
     # under consideration
     result_board = copy.deepcopy(board)
@@ -143,8 +157,8 @@ def eval_move(possible_move, game, board, echo=False):
         return None
 
     # gather some basic information about the current configuration
-    moves_available = len(board.get_legal_moves())
-    move_num = len(game.move_history) + 1
+    score_multipliers['moves_available'] = len(board.get_legal_moves())
+    score_multipliers['move_num'] = len(game.move_history) + 1
     num_pieces_self = 0
     num_pieces_opp = 0
     num_kings_self = 0
@@ -160,13 +174,17 @@ def eval_move(possible_move, game, board, echo=False):
             if piece.is_king:
                 num_kings_opp += 1
     if echo:
-        print(possible_move)   
+        print(possible_move)
+    score_multipliers['num_pieces_self'] = num_pieces_self
+    score_multipliers['num_pieces_opp'] = num_pieces_opp
+    score_multipliers['num_kings_self'] = num_kings_self
+    score_multipliers['num_kings_opp'] = num_kings_opp
 
     # look at the legal moves for the next configuration
     result_legal_moves = result_board.get_legal_moves()
-    num_resulting_moves = len(result_legal_moves)
-    if echo: print('Opponent Moves Available: %d' % num_resulting_moves)
-   
+    score_multipliers['num_resulting_moves'] = len(result_legal_moves)
+    if echo: print('Opponent Moves Available: %d' % score_multipliers['num_resulting_moves'])
+
     # check to see if a move will make a king
     makes_king = False
     takes_king = False ## NEED TO IMPLEMENT
@@ -181,9 +199,11 @@ def eval_move(possible_move, game, board, echo=False):
             makes_king = True
     if echo and makes_king:
         print('This Move Makes a King')
-    
+    score_multipliers['makes_king'] = makes_king
+    score_multipliers['takes_king'] = takes_king
+
     # is the resulting move a winning move?
-    if num_resulting_moves == 0:
+    if score_multipliers['num_resulting_moves'] == 0:
         if echo: print('This is a winning move!')
         return 1
 
@@ -212,22 +232,20 @@ def eval_move(possible_move, game, board, echo=False):
                 if result_board.pieces[pos].is_king:
                     print('(KING)')
                 else:
-                    print('\n',end='')
-    
+                    print('\n', end='')
+
     del result_board
-    score = calculate_success(moves_available, move_num, num_pieces_self, num_pieces_opp, \
-        num_kings_self, num_kings_opp, makes_king, takes_king, num_resulting_moves, \
-        self_pieces_threatened, num_threats)
-    if score !=0 and score is not None: 
+    score = calculate_success(score_multipliers, AI_MULTIPLIERS)
+    if score != 0 and score is not None:
         print('MOVE SCORE: %.2f' % score)
     else:
         print('No Score Given!!!')
     ft.log_function('eval_move', t_start)
     return score
 
-def calculate_success(moves_available, move_num, num_pieces_self, num_pieces_opp, \
-    num_kings_self, num_kings_opp, makes_king, takes_king, num_resulting_moves, \
-    self_pieces_threatened, num_threats):
+
+
+def calculate_success(sm, AI_MULTIPLIERS):
     """
     Calculate the chance of this being a "good move" based on the following criteria:
 
@@ -248,31 +266,21 @@ def calculate_success(moves_available, move_num, num_pieces_self, num_pieces_opp
     print('Calculating Move Success...')
     score = 5
 
-    # Fewer moves available should lead to a higher score
-    # Score ~ 1/moves_available
-    # Maybe??
+    key = 'makes_king'
+    if key in sm.keys():
+        if sm[key]:
+            score = score * AI_MULTIPLIERS[key]
+    
+    key = 'self_pieces_threatened'
+    if key in sm.keys() and sm[key] != 0:
+        score = score * AI_MULTIPLIERS[key] * sm[key]
+    
+    key = 'num_threats'
+    if key in sm.keys() and sm[key] != 0:
+        score = score * AI_MULTIPLIERS[key] * sm[key]
 
-    # taking and making kings generates a higher score
-    if takes_king:
-        score += 1
-    if makes_king:
-        score += 1
-    print('king score: %.2f' % score)
-    # being threatened reduces score:
-    score -= self_pieces_threatened * num_threats
-    print('threat reduction: %.2f' % score)
+    key = 'num_resulting_moves'
+    if key in sm.keys() and sm[key] != 0:
+        score = score / AI_MULTIPLIERS[key] / sm[key]
 
-    # giving the opponent fewer options generates a higher score
-    # as long as no pieces are threatened
-    if self_pieces_threatened == 0:
-        score = score / num_resulting_moves
-        print('Option reduction: %.2f' % score)
-
-    ### IGNORED FOR NOW:
-    # move_num
-    # num_pieces_self
-    # num_pieces_opp
-    # num_kings_self
-    # num_kings_opp
-    print('Score is %.2f' % score)
     return score
