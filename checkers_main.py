@@ -14,7 +14,7 @@ LOG_FILE = 'game_history'
 
 ## Here is a change for you!
 
-def play_game(graphics=False):
+def play_game(graphics=True):
     """Main loop for checkers game."""
     player_1 = Player(1, "Blair", "Black", "AI")
     player_2 = Player(2, "Kivo", "Red", "AI")
