@@ -8,8 +8,6 @@ import function_timer as ft
 from graphics import *
 
 MAXIMUM_DB_SEARCH_TURN = 6 # May increase as more data is collected
-
-## One more chance ;)
 REP_BOARD_DICT = dict()
 
 def pick_best_move(game, board, echo=False):
