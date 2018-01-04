@@ -12,6 +12,8 @@ import function_timer as ft
 ### CONSTANTS ###
 LOG_FILE = 'game_history'
 
+## Here is a change for you!
+
 def play_game(graphics=False):
     """Main loop for checkers game."""
     player_1 = Player(1, "Blair", "Black", "AI")
