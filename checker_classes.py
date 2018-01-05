@@ -44,16 +44,17 @@ class Game:
             print('Move History: ')
             for move in self.move_history:
                 print(move)
-        return ''    
+        return
 
     def end(self, winner=None):
+        """Declare the end of the game."""
         if not winner:
             print('Game has ended in a draw.')
         else:
             self.winner = winner
-            print('Game over. %s has won!' %\
-                self.players[winner].name)
-    
+            print('Game over. %s has won in %d turns!' %\
+                (self.players[winner].name, len(self.move_history)))
+
     def log(self, log_file):
         """
         Log the result of the game for later analysis.
@@ -61,14 +62,14 @@ class Game:
         Keys are based on the GMT time at which the game was logged.
         Values are move_history.
         """
-        game_id = time.strftime('%c',time.gmtime())
+        game_id = time.strftime('%c', time.gmtime())
         print('Logging game ID %s...' % game_id)
         game_id = pickle.dumps(game_id)
         move_history = pickle.dumps(self.move_history)
         game_data = dbm.open(log_file, 'c')
         game_data[game_id] = move_history
         game_data.close()
-        
+
 class Board:
     """
     Represents the board and all the pieces on it
@@ -90,6 +91,7 @@ class Board:
                         2: Player(2)}
         self.pieces = dict()
         self.turn = 1
+        self.draw_counter = 0
         self.opponent = 2
 
         if int_rep:
@@ -133,6 +135,9 @@ class Board:
             self.turn = 1
             self.opponent = 2
 
+    def get_next_turn(self):
+        return 2 if self.turn == 1 else 1
+
     def execute_move(self, move):
         """Executes a move by changing the position of a piece."""
         legal_moves = self.get_legal_moves()
@@ -144,6 +149,7 @@ class Board:
             del self.pieces[move.start_position]
             # print('Moving %s' % piece)
             piece.position = move.end_position
+            self.draw_counter += 1
             # print('Moved to %s' % piece.position)
             # check to see if we made a king
             if (move.end_position.row == 1 and self.turn == 1)\
@@ -232,10 +238,13 @@ class Board:
         """Captures a piece and removes it from the board."""
         if echo: print("Capturing piece %s" % piece)
         self.players[piece.player.number].num_pieces -= 1
+        self.draw_counter = 0
         del self.pieces[piece.position]
 
     def setup_new_game(self):
         """Set up the board for a new game."""
+        self.players[1].num_pieces = 0
+        self.players[2].num_pieces = 0
         for row in range(1, 9):
             for col in range(1, 9):
                 position = Position(row, col)

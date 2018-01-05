@@ -97,6 +97,7 @@ def pick_best_move(game, board, echo=False):
         best_score = max(scored_moves.keys())
     else:
         print('NO MORE UNIQUE MOVES!')
+        return None
 
     ft.log_function('pick_best_move', t_start)
 
@@ -150,19 +151,23 @@ def eval_move(move, game, board, echo=False):
     result_legal_moves = result_board.get_legal_moves()
     
     if result_board.turn == board.turn:
+        if not result_legal_moves:
+            if echo:
+                print('This move would lose the game.')
+            return 0
         move.self_resulting_moves = len(result_legal_moves)
         move.opp_resulting_moves = 0
         if echo:
             print('Self Resulting Moves: %d' % move.self_resulting_moves)
     else:
+        if not result_legal_moves:
+            if echo:
+                print('This would be a winning move!')
+            return 1000
         move.opp_resulting_moves = len(result_legal_moves)
         move.self_resulting_moves = 0
         if echo:
             print('Opponent Resulting Moves: %d' % move.opp_resulting_moves)
-        if move.opp_resulting_moves == 0:
-            if echo: print('This is a winning move!')
-            ## NEED A BETTER RETURN VALUE
-            return 1000
 
     # test to see if this move forces a jump next turn
     if result_legal_moves[0].is_jump():
