@@ -5,19 +5,6 @@ import time
 import copy
 import function_timer as ft
 
-AI_MULTIPLIERS = {\
-    'moves_available': 1,\
-    'move_num': 1,\
-    'num_pieces_self': 1,\
-    'num_pieces_opp': 1,\
-    'num_kings_self': 1,\
-    'num_kings_opp': 1,\
-    'makes_king': 1.5,\
-    'takes_king': 1.5,\
-    'num_resulting_moves': 0.5,\
-    'self_pieces_threatened': 0.25,\
-    'num_threats': 0.25}
-
 def print_turn_eval(game, board):
     """Print basic info prior to evaluating which move to make."""
     moves_available = len(board.get_legal_moves())
@@ -26,7 +13,8 @@ def print_turn_eval(game, board):
     num_kings_self = 0
     num_kings_opp = 0
 
-    print('TURN # %d EVALUATION (%s):' % ((len(game.move_history) + 1), game.players[board.turn].color))
+    print('TURN # %d EVALUATION (%s):' % \
+        ((len(game.move_history) + 1), game.players[board.turn].color))
     print('------------------------')
     for key in board.pieces.keys():
         piece = board.pieces[key]
@@ -108,7 +96,6 @@ def eval_move(move, game, board, echo=False):
     """Function to evaluate the probability of a move
     leading to a successful outcome."""
     t_start = time.time()
-    score_multipliers = dict()
     # make a copy of the existing board, and execute the move
     # under consideration
     result_board = copy.deepcopy(board)
@@ -149,7 +136,7 @@ def eval_move(move, game, board, echo=False):
 
     # look at the legal moves for the next configuration
     result_legal_moves = result_board.get_legal_moves()
-    
+
     if result_board.turn == board.turn:
         if not result_legal_moves:
             if echo:
@@ -170,11 +157,8 @@ def eval_move(move, game, board, echo=False):
             print('Opponent Resulting Moves: %d' % move.opp_resulting_moves)
 
     # test to see if this move forces a jump next turn
-    if result_legal_moves[0].is_jump():
-        move.forces_jump = True
-    else:
-        move.forces_jump = False
-    
+    move.forces_jump = result_legal_moves[0].is_jump()
+
     # check to see if a move will make a king
     move_piece = board.pieces[move.start_position] # current piece we are moving
     result_piece = result_board.pieces[move.end_position]
@@ -201,7 +185,7 @@ def eval_move(move, game, board, echo=False):
     move.num_threats = 0
     move.king_threats = 0
     if result_legal_moves[0].is_jump():
-        if echo: 
+        if echo:
             print('This Move Results in a Capture!')
         # see exactly how many pieces are threatened
         move.threatened_positions = []
@@ -225,14 +209,14 @@ def eval_move(move, game, board, echo=False):
                 else:
                     print('\n', end='')
 
-    score = calculate_success(move, AI_MULTIPLIERS)
+    score = calculate_score(move)
     if score != 0 and score is not None and echo:
         print('--- MOVE SCORE: %.2f' % score)
         print('')
     ft.log_function('eval_move', t_start)
     return score
 
-def calculate_success(move, AI_MULTIPLIERS):
+def calculate_score(move):
     """
     Calculate the chance of this being a "good move" based on the following criteria:
 
@@ -251,6 +235,19 @@ def calculate_success(move, AI_MULTIPLIERS):
     Returns: Calculated chance of success
     """
     score = 5 # DEFAULT SCORE
+
+    AI_MULTIPLIERS = {\
+        'moves_available': 1,\
+        'move_num': 1,\
+        'num_pieces_self': 1,\
+        'num_pieces_opp': 1,\
+        'num_kings_self': 1,\
+        'num_kings_opp': 1,\
+        'makes_king': 1.5,\
+        'takes_king': 1.5,\
+        'num_resulting_moves': 0.5,\
+        'self_pieces_threatened': 0.25,\
+        'num_threats': 0.25}
 
     if move.makes_king:
         score = score * AI_MULTIPLIERS['makes_king']

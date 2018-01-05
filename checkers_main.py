@@ -1,7 +1,6 @@
 #checkers_main.py
 """Main checkers program."""
 import time
-import copy
 
 import checker_graphics
 from checker_classes import Board, Position, Game, Player
@@ -17,11 +16,6 @@ MAX_DRAW_COUNT = 40
 
 # Maxium difference between number of pieces each player
 # has in order for a draw to be triggered
-# for example, if player 1 has 3 pieces and player 2
-# has 3 pieces, the difference is 0 and a draw is possible
-# if player 1 has 6 pieces and player 2 has 3 pieces,
-# the difference is 3 and a draw is not possible, since
-# player 1 is considered to be more powerful than player 2.
 MAX_DRAW_PIECE_DIFF = 2
 
 def play_game(player_1, player_2, graphics=True, echo=False):
@@ -62,7 +56,7 @@ def play_game(player_1, player_2, graphics=True, echo=False):
             if echo:
                 pick_best_move(game, board, echo=True)
             input_move = checker_graphics.get_graphics_move(GRAPHICS_WINDOW)
-        
+
         ### IF NO MOVE GIVEN, DECLARE DRAW
         if not input_move:
             game.end(winner=None)
@@ -104,14 +98,14 @@ def play_game(player_1, player_2, graphics=True, echo=False):
     if graphics:
         GRAPHICS_WINDOW.close()
 
-if __name__=='__main__':
-    NUM_GAMES = 100
+if __name__ == '__main__':
+    NUM_GAMES = 1
 
-    player_1 = Player(1, "Blair", "Black", "AI")
-    player_2 = Player(2, "Kivo", "Red", "AI")
+    PLAYER_1 = Player(1, "Blair", "Black", "AI")
+    PLAYER_2 = Player(2, "Kivo", "Red", "AI")
 
     for i in range(NUM_GAMES):
         print('Game %d of %d....' % (i+1, NUM_GAMES))
-        play_game(player_1, player_2, graphics=False, echo=False) 
+        play_game(PLAYER_1, PLAYER_2, graphics=False, echo=False)
 
     ft.report_game_metrics()

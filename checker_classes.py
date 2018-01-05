@@ -48,12 +48,14 @@ class Game:
 
     def end(self, winner=None):
         """Declare the end of the game."""
+        total_turns = len(self.move_history)
         if not winner:
-            print('Game has ended in a draw.')
+            print('Game has ended in a draw after %d turns.' %\
+                total_turns)
         else:
             self.winner = winner
             print('Game over. %s has won in %d turns!' %\
-                (self.players[winner].name, len(self.move_history)))
+                (self.players[winner].name, total_turns))
 
     def log(self, log_file):
         """
