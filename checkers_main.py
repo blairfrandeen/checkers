@@ -4,8 +4,7 @@ import time
 import copy
 
 import checker_graphics
-from checker_classes import Board, Position, Game, Player, Move, Piece
-import checker_classes
+from checker_classes import Board, Position, Game, Player
 from checker_ai import pick_best_move
 import function_timer as ft
 
