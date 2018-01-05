@@ -16,7 +16,7 @@ LOG_FILE = 'game_history'
 
 def play_game(graphics=True):
     """Main loop for checkers game."""
-    player_1 = Player(1, "Blair", "Black", "AI")
+    player_1 = Player(1, "Blair", "Black", "Human")
     player_2 = Player(2, "Kivo", "Red", "AI")
     game = Game(player_1=player_1, player_2=player_2)
     game.start_time = time.time()
@@ -75,10 +75,10 @@ def play_game(graphics=True):
             if checker_graphics.TIME_STEP != 0:
                 checker_graphics.draw_board(board, GRAPHICS_WINDOW)
                 GRAPHICS_WINDOW.update()
-                GRAPHICS_WINDOW.getMouse()
+                # GRAPHICS_WINDOW.getMouse()
                 time.sleep(checker_graphics.TIME_STEP)
 ### MAIN
-NUM_GAMES = 1
+NUM_GAMES = 100
 
 for i in range(NUM_GAMES):
     print('Game %d of %d....' % (i+1, NUM_GAMES))

@@ -20,8 +20,8 @@ AI_MULTIPLIERS = {\
     'makes_king': 1.5,\
     'takes_king': 1.5,\
     'num_resulting_moves': 0.5,\
-    'self_pieces_threatened': 0.5,\
-    'num_threats': 0.5}
+    'self_pieces_threatened': 0.25,\
+    'num_threats': 0.25}
 
 def print_turn_eval(game, board):
     """Print basic info prior to evaluating which move to make."""
@@ -61,32 +61,30 @@ def pick_best_move(game, board, echo=False):
     # if len(legal_moves) == 1:
     #     return legal_moves[0]
 
-    print_turn_eval(game, board)
+    if echo:
+        print_turn_eval(game, board)
 
     scored_moves = dict()
     for possible_move in legal_moves:
-        success_chance = eval_move(possible_move, game, board, echo=True)
+        success_chance = eval_move(possible_move, game, board, echo=False)
         if success_chance != 0 and success_chance is not None:
             if success_chance not in scored_moves:
                 scored_moves[success_chance] = [possible_move]
             else:
                 scored_moves[success_chance] = [possible_move] + scored_moves[success_chance]
-        else:
-            print('NO CHANCE OF SUCCESS!')
-        # if success_chance == 0:
-        #     legal_moves.remove(possible_move)
-        #     continue
-
-    print('SUMMARY:')
-    print('---------------')
+    if echo:
+        print('SUMMARY:')
+        print('---------------')
     for score in sorted(scored_moves.keys()):
         moves_at_score = scored_moves[score]
         move_str = ''
         for move in moves_at_score:
             move_str = move_str + move.__str__()
-        print('SCORE %.2f: %s' % (score, move_str))
+        if echo:
+            print('SCORE %.2f: %s' % (score, move_str))
         move_str = ''
-    print('-------------\n')
+    if echo:
+        print('-------------\n')
 
     if scored_moves.keys():
         best_score = max(scored_moves.keys())
@@ -150,12 +148,13 @@ def eval_move(possible_move, game, board, echo=False):
     # on this players turn. If it has, do a different move
     # this helps to avoid infinite loops that should be a draw
     result_int = result_board.int_rep()
-    if result_int in game.board_history[board.turn]:
-        print(game.board_history)
-        print("Already Been Here, Done That!")
-        print(result_int)
+    if result_int in game.board_history[result_board.turn]:
+        # print(game.board_history)
+        # print("Already Been Here, Done That!")
+        # print(result_int)
         return None
-
+#465452383727610318580351000
+#465452383727610318580351000
     # gather some basic information about the current configuration
     score_multipliers['moves_available'] = len(board.get_legal_moves())
     score_multipliers['move_num'] = len(game.move_history) + 1
@@ -223,7 +222,8 @@ def eval_move(possible_move, game, board, echo=False):
                 if result_board.pieces[jump_move.mid_pos()].is_king:
                     threatened_kings.append(jump_move.mid_pos())
         num_threats = len(threatened_positions)
-        print('Num_threats: %d' % num_threats)
+        if echo:
+            print('Num_threats: %d' % num_threats)
         king_threats = len(threatened_kings)
         if echo:
             print('The following pieces are threatened:')
@@ -234,12 +234,15 @@ def eval_move(possible_move, game, board, echo=False):
                 else:
                     print('\n', end='')
 
+    score_multipliers['num_threats'] = num_threats
+    score_multipliers['king_threats'] = king_threats
+    score_multipliers['self_pieces_threatened'] = self_pieces_threatened
+
     del result_board
     score = calculate_success(score_multipliers, AI_MULTIPLIERS)
-    if score != 0 and score is not None:
-        print('MOVE SCORE: %.2f' % score)
-    else:
-        print('No Score Given!!!')
+    if score != 0 and score is not None and echo:
+        print('--- MOVE SCORE: %.2f' % score)
+        print('')
     ft.log_function('eval_move', t_start)
     return score
 
@@ -263,7 +266,6 @@ def calculate_success(sm, AI_MULTIPLIERS):
 
     Returns: Calculated chance of success
     """
-    print('Calculating Move Success...')
     score = 5
 
     key = 'makes_king'
@@ -273,14 +275,15 @@ def calculate_success(sm, AI_MULTIPLIERS):
     
     key = 'self_pieces_threatened'
     if key in sm.keys() and sm[key] != 0:
-        score = score * AI_MULTIPLIERS[key] * sm[key]
+        score = score * AI_MULTIPLIERS[key] / sm[key]
     
     key = 'num_threats'
     if key in sm.keys() and sm[key] != 0:
-        score = score * AI_MULTIPLIERS[key] * sm[key]
+        score = score * AI_MULTIPLIERS[key] / sm[key]
 
     key = 'num_resulting_moves'
     if key in sm.keys() and sm[key] != 0:
-        score = score / AI_MULTIPLIERS[key] / sm[key]
+        if sm['num_threats'] == 0:
+            score = score / AI_MULTIPLIERS[key] / sm[key]
 
     return score
