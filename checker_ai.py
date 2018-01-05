@@ -148,21 +148,28 @@ def eval_move(move, game, board, echo=False):
 
     # look at the legal moves for the next configuration
     result_legal_moves = result_board.get_legal_moves()
+    
     if result_board.turn == board.turn:
         move.self_resulting_moves = len(result_legal_moves)
         move.opp_resulting_moves = 0
         if echo:
-            print('Self Moves Available: %d' % move.self_resulting_moves)
+            print('Self Resulting Moves: %d' % move.self_resulting_moves)
     else:
         move.opp_resulting_moves = len(result_legal_moves)
         move.self_resulting_moves = 0
         if echo:
-            print('Opponent Moves Available: %d' % move.opp_resulting_moves)
+            print('Opponent Resulting Moves: %d' % move.opp_resulting_moves)
         if move.opp_resulting_moves == 0:
             if echo: print('This is a winning move!')
             ## NEED A BETTER RETURN VALUE
-            return 100
+            return 1000
 
+    # test to see if this move forces a jump next turn
+    if result_legal_moves[0].is_jump():
+        move.forces_jump = True
+    else:
+        move.forces_jump = False
+    
     # check to see if a move will make a king
     move_piece = board.pieces[move.start_position] # current piece we are moving
     result_piece = result_board.pieces[move.end_position]
@@ -258,7 +265,11 @@ def calculate_success(move, AI_MULTIPLIERS):
         score = score / AI_MULTIPLIERS['num_resulting_moves'] \
             / move.opp_resulting_moves
 
+    # if the evaluator of this move will get to go again:
     if move.self_resulting_moves != 0:
-        score = score * move.self_resulting_moves
+        if move.forces_jump:
+            score = score * 10 * move.self_resulting_moves
+        else:
+            score = score * move.self_resulting_moves
 
     return score
