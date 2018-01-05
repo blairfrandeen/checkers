@@ -3,11 +3,10 @@ checker_classes.py
 
 Contains all game mechanics for checkers.
 """
-import math
 import time
 import pickle
 import dbm
-from itertools import count
+
 class Game:
     """Represents a game of checkers."""
 
@@ -138,6 +137,7 @@ class Board:
             self.opponent = 2
 
     def get_next_turn(self):
+        """Return whose turn it will be next."""
         return 2 if self.turn == 1 else 1
 
     def execute_move(self, move):
@@ -171,9 +171,9 @@ class Board:
             return None
         legal_moves = []
         must_jump = False
-        POSSIBLE_MOVE_VECTORS = [\
-            Position(1, 1), Position(1, -1),\
-            Position(-1, 1), Position (-1, -1)]
+        move_vectors = [\
+            Position(1, 1), Position(1, -1), \
+            Position(-1, 1), Position(-1, -1)]
         magnitudes = [2, 1]
         for multiplier in magnitudes:
             if multiplier == 1 and must_jump:
@@ -183,7 +183,7 @@ class Board:
                 if piece_to_try.player.number != self.turn:
                     continue
                 piece_moves = 0
-                for vector in POSSIBLE_MOVE_VECTORS:
+                for vector in move_vectors:
                     position_to_try = \
                         piece_to_try.position + multiplier * vector
                     move_to_try = Move(piece_to_try.position, position_to_try)
@@ -192,10 +192,11 @@ class Board:
                         piece_moves += 1
                         if multiplier == 2:
                             must_jump = True
-                            if echo: print('%s Must Jump!' % self.players[self.turn].name)
+                            if echo:
+                                print('%s Must Jump!' % self.players[self.turn].name)
                     else:
                         del move_to_try
-        del POSSIBLE_MOVE_VECTORS
+        del move_vectors
         return legal_moves
 
     def is_legal_move(self, move, echo=False):
@@ -204,41 +205,48 @@ class Board:
         if move.start_position in self.pieces.keys():
             piece = self.pieces[move.start_position]
         else:
-            if echo: print("Please select a piece to move")
+            if echo:
+                print("Please select a piece to move")
             return False
 
         # check that the end position is open
         if move.end_position in self.pieces.keys():
-            if echo: print("Position is not open!!")
+            if echo:
+                print("Position is not open!!")
             return False
-        
+
         # check if a backwards move is allowed
         if not piece.is_king:
             delta_row = (move.end_position - move.start_position).row
             if (delta_row > 0 and self.turn == 1) \
                 or (delta_row < 0 and self.turn == 2):
-                if echo: print("Cannot move a non-king backwards!")
+                if echo:
+                    print("Cannot move a non-king backwards!")
                 return False
-        
+
         # check that there is a piece to jump
         if move.is_jump():
             if move.mid_pos() in self.pieces.keys():
                 if self.turn == self.pieces[move.mid_pos()].player.number:
-                    if echo: print("Jumping your own piece: Bad idea bro.")
+                    if echo:
+                        print("Jumping your own piece: Bad idea bro.")
                     return False
             else:
-                if echo: print("Cannot jump an empty square!")
+                if echo:
+                    print("Cannot jump an empty square!")
                 return False
 
         # check that the right player is moving
         if piece.player.number != self.turn:
-            if echo: print("It's not your turn")
+            if echo:
+                print("It's not your turn")
             return False
         return True
 
     def capture_piece(self, piece, echo=False):
         """Captures a piece and removes it from the board."""
-        if echo: print("Capturing piece %s" % piece)
+        if echo:
+            print("Capturing piece %s" % piece)
         self.players[piece.player.number].num_pieces -= 1
         self.draw_counter = 0
         del self.pieces[piece.position]
@@ -264,7 +272,7 @@ class Board:
 
     def piece_from_char(self, char):
         """
-        Look at a character from a board string 
+        Look at a character from a board string
         to determine the player number and king status for a piece.
         """
         player_num = int(char)
@@ -277,14 +285,14 @@ class Board:
         player = self.players[player_num]
 
         return player, is_king
-    
+
     def print_legal_moves(self):
         """Print a list of legal moves to the console."""
         legal_moves = self.get_legal_moves()
         print('Legal Moves Available:')
         for move in legal_moves:
             print(move)
-        
+
     def piece_to_str(self, piece):
         """Generate a string character based on a pieces attributes."""
         player_num = piece.player.number
@@ -370,7 +378,7 @@ class Position:
 
     def __mul__(self, multiplier):
         return Position((self.row * multiplier), (self.col*multiplier))
-        
+
     def __rmul__(self, multiplier):
         return self.__mul__(multiplier)
 
@@ -378,14 +386,15 @@ class Position:
         return Position((int(self.row / divisor)), (int(self.col / divisor)))
 
     def mid_position(self, other):
-        return ((self + other) / 2)
+        """Return position that was jumped over."""
+        return (self + other) / 2
 
     def is_valid(self):
+        """Return true if position is on the board and on a black square."""
         if (1 <= self.row <= 8) and (1 <= self.col <= 8):
             return (self.row % 2 != 0 and self.col % 2 == 0) or\
                     (self.row % 2 == 0 and self.col % 2 != 0)
-        else:
-            return False
+        return False
 
 class Piece():
     """
@@ -426,8 +435,7 @@ class Move:
         """Determine if a move involves a jump."""
         if abs(self.start_position.row-self.end_position.row) > 1:
             return True
-        else:
-            return False
+        return False
 
     def mid_pos(self):
         """Return the Position between the starting and ending positions."""
@@ -439,34 +447,19 @@ class Move:
         """Determine if a proposed move is valid."""
         delta = self.end_position - self.start_position
         if abs(delta.row) != abs(delta.col):
-            if echo: print("Invalid Move: Must move on a diagonal!")
+            if echo:
+                print("Invalid Move: Must move on a diagonal!")
             return False
         if abs(delta.row) > 2:
-            if echo: print("Invalid Move: may only go 1 or 2 spaces!")
+            if echo:
+                print("Invalid Move: may only go 1 or 2 spaces!")
             return False
         if not self.start_position.is_valid() or not self.end_position.is_valid():
-            if echo: print("Invalid Move: Stay on the board!")
+            if echo:
+                print("Invalid Move: Stay on the board!")
             return False
         del delta
         return True
 
 if __name__ == '__main__':
-    import copy
-    b = Board()
-    print(b)
-    b.print_legal_moves()
-    test = copy.copy(b)
-    test.next_turn()
-    test.print_legal_moves()
-    b.print_legal_moves()
-    # pp1 = Position(3,2)
-    # pp2 = Position(4,3)
-    # m = Move(pp1,pp2)
-    # b.execute_move(m)
-    # m2 = Move(Position(6,1),Position(5,2))
-    # rep = b.int_rep()
-    # print(b)
-    # print(rep)
-    # c = Board(rep,m2)
-    # print(c)
-
+    pass
