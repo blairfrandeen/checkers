@@ -14,7 +14,7 @@ PLAYER_2_COLOR = "Red"
 BOARD_SIZE = 500
 SQUARE_SIZE = BOARD_SIZE / 8
 PIECE_SIZE = BOARD_SIZE / 20
-TIME_STEP = 0.25 # time step for animating automated games
+TIME_STEP = 0.05 # time step for animating automated games
 
 def get_rc(mouse_x, mouse_y):
     """Return the position that was clicked on."""
@@ -45,16 +45,10 @@ def get_graphics_move(graph_win):
     graphics_move = Move(start_position, end_position)
     return graphics_move
 
-# needs update to remove player and board arguments.
-# row and column should be sufficient
 def draw_piece(piece, graph_win):
-    """Draws a piece at a given row and column"""
+    """Draw a piece at a given row and column"""
     r_px = SQUARE_SIZE * (1/2 + piece.position.row-1)
     c_px = SQUARE_SIZE * (1/2 + piece.position.col-1)
-    # if piece.player.number == 1:
-    #     piece_color = PLAYER_1_COLOR
-    # elif piece.player.number == 2:
-    #     piece_color = PLAYER_2_COLOR
     p_graphic = Circle(Point(c_px, r_px), PIECE_SIZE)
     p_graphic.setFill(piece.player.color)
     if piece.is_king:
@@ -116,6 +110,7 @@ def draw_status(current_board, graph_win):
 
 def draw_board(current_board, graph_win):
     """Draws the boad and the pieces on it"""
+    graph_win.delete('all')
     draw_background(graph_win)
     for key in current_board.pieces.keys():
         draw_piece(current_board.pieces[key], graph_win)

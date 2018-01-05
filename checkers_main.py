@@ -12,7 +12,7 @@ import function_timer as ft
 ### CONSTANTS ###
 LOG_FILE = 'game_history'
 
-## Here is a change for you!
+# Change?
 
 def play_game(graphics=True):
     """Main loop for checkers game."""
@@ -75,6 +75,7 @@ def play_game(graphics=True):
             if checker_graphics.TIME_STEP != 0:
                 checker_graphics.draw_board(board, GRAPHICS_WINDOW)
                 GRAPHICS_WINDOW.update()
+                GRAPHICS_WINDOW.getMouse()
                 time.sleep(checker_graphics.TIME_STEP)
 ### MAIN
 NUM_GAMES = 1
