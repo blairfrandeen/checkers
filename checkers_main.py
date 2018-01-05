@@ -12,12 +12,8 @@ import function_timer as ft
 ### CONSTANTS ###
 LOG_FILE = 'game_history'
 
-# Change?
-
-def play_game(graphics=True):
+def play_game(player_1, player_2, graphics=True):
     """Main loop for checkers game."""
-    player_1 = Player(1, "Blair", "Black", "Human")
-    player_2 = Player(2, "Kivo", "Red", "AI")
     game = Game(player_1=player_1, player_2=player_2)
     game.start_time = time.time()
 
@@ -77,12 +73,17 @@ def play_game(graphics=True):
                 GRAPHICS_WINDOW.update()
                 # GRAPHICS_WINDOW.getMouse()
                 time.sleep(checker_graphics.TIME_STEP)
-### MAIN
-NUM_GAMES = 100
 
-for i in range(NUM_GAMES):
-    print('Game %d of %d....' % (i+1, NUM_GAMES))
-    play_game() 
+    GRAPHICS_WINDOW.close()
 
-ft.report_game_metrics()
-# print('Graphics Objects: %d' % len(Move.instances))
+if __name__=='__main__':
+    NUM_GAMES = 2
+
+    player_1 = Player(1, "Blair", "Black", "AI")
+    player_2 = Player(2, "Kivo", "Red", "AI")
+
+    for i in range(NUM_GAMES):
+        print('Game %d of %d....' % (i+1, NUM_GAMES))
+        play_game(player_1, player_2, graphics=True) 
+
+    ft.report_game_metrics()
