@@ -72,14 +72,14 @@ def play_game(player_1, player_2, graphics=True, echo=False):
                 GRAPHICS_WINDOW.update()
                 # GRAPHICS_WINDOW.getMouse()
                 time.sleep(checker_graphics.TIME_STEP)
-                GRAPHICS_WINDOW.getMouse()
+                # GRAPHICS_WINDOW.getMouse()
 
     GRAPHICS_WINDOW.close()
 
 if __name__=='__main__':
     NUM_GAMES = 1
 
-    player_1 = Player(1, "Blair", "Black", "AI")
+    player_1 = Player(1, "Blair", "Black", "Human")
     player_2 = Player(2, "Kivo", "Red", "AI")
 
     for i in range(NUM_GAMES):

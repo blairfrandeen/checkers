@@ -148,9 +148,20 @@ def eval_move(move, game, board, echo=False):
 
     # look at the legal moves for the next configuration
     result_legal_moves = result_board.get_legal_moves()
-    move.num_resulting_moves = len(result_legal_moves)
-    if echo:
-        print('Opponent Moves Available: %d' % move.num_resulting_moves)
+    if result_board.turn == board.turn:
+        move.self_resulting_moves = len(result_legal_moves)
+        move.opp_resulting_moves = 0
+        if echo:
+            print('Self Moves Available: %d' % move.self_resulting_moves)
+    else:
+        move.opp_resulting_moves = len(result_legal_moves)
+        move.self_resulting_moves = 0
+        if echo:
+            print('Opponent Moves Available: %d' % move.opp_resulting_moves)
+        if move.opp_resulting_moves == 0:
+            if echo: print('This is a winning move!')
+            ## NEED A BETTER RETURN VALUE
+            return 100
 
     # check to see if a move will make a king
     move_piece = board.pieces[move.start_position] # current piece we are moving
@@ -166,22 +177,14 @@ def eval_move(move, game, board, echo=False):
         if echo and move.makes_king:
             print('This Move Makes a King')
 
+    move.takes_king = False
     if move.is_jump():
         if board.pieces[move.mid_pos()].is_king:
             move.takes_king = True
             if echo:
                 print('The Move Would Take a King')
-    else:
-        move.takes_king = False
 
-
-    # is the resulting move a winning move?
-    if move.num_resulting_moves == 0:
-        if echo: print('This is a winning move!')
-        ## NEED A BETTER RETURN VALUE
-        return 100
-
-    # will the move result in getting jumped?
+    # will the move result in any threats?
     move.self_pieces_threatened = 0
     move.num_threats = 0
     move.king_threats = 0
@@ -251,8 +254,11 @@ def calculate_success(move, AI_MULTIPLIERS):
         score = score * AI_MULTIPLIERS['num_threats'] \
             / move.num_threats
 
-    if move.num_resulting_moves != 0 and move.num_threats == 0:
+    if move.opp_resulting_moves != 0 and move.num_threats == 0:
         score = score / AI_MULTIPLIERS['num_resulting_moves'] \
-            / move.num_resulting_moves
+            / move.opp_resulting_moves
+
+    if move.self_resulting_moves != 0:
+        score = score * move.self_resulting_moves
 
     return score
