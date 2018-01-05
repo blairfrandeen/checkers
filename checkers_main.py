@@ -11,7 +11,7 @@ import function_timer as ft
 ### CONSTANTS ###
 LOG_FILE = 'game_history'
 
-def play_game(player_1, player_2, graphics=True):
+def play_game(player_1, player_2, graphics=True, echo=False):
     """Main loop for checkers game."""
     game = Game(player_1=player_1, player_2=player_2)
     game.start_time = time.time()
@@ -41,11 +41,11 @@ def play_game(player_1, player_2, graphics=True):
             game.log(LOG_FILE)
             break
 
-        # get input move from human or AI
+        #### GET INPUT MOVE FROM HUMAN OR AI
         if game.players[board.turn].control == "AI":
-            input_move = pick_best_move(game, board)
+            input_move = pick_best_move(game, board, echo)
         else:
-            pick_best_move(game, board)
+            pick_best_move(game, board, echo)
             input_move = checker_graphics.get_graphics_move(GRAPHICS_WINDOW)
 
         if graphics:
@@ -72,17 +72,18 @@ def play_game(player_1, player_2, graphics=True):
                 GRAPHICS_WINDOW.update()
                 # GRAPHICS_WINDOW.getMouse()
                 time.sleep(checker_graphics.TIME_STEP)
+                GRAPHICS_WINDOW.getMouse()
 
     GRAPHICS_WINDOW.close()
 
 if __name__=='__main__':
-    NUM_GAMES = 2
+    NUM_GAMES = 1
 
     player_1 = Player(1, "Blair", "Black", "AI")
     player_2 = Player(2, "Kivo", "Red", "AI")
 
     for i in range(NUM_GAMES):
         print('Game %d of %d....' % (i+1, NUM_GAMES))
-        play_game(player_1, player_2, graphics=True) 
+        play_game(player_1, player_2, graphics=True, echo=True) 
 
     ft.report_game_metrics()
