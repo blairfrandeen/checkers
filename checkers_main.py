@@ -101,11 +101,11 @@ def play_game(player_1, player_2, graphics=True, echo=False):
 if __name__ == '__main__':
     NUM_GAMES = 1
 
-    PLAYER_1 = Player(1, "Blair", "Black", "AI")
+    PLAYER_1 = Player(1, "Blair", "Black", "Human")
     PLAYER_2 = Player(2, "Kivo", "Red", "AI")
 
     for i in range(NUM_GAMES):
         print('Game %d of %d....' % (i+1, NUM_GAMES))
-        play_game(PLAYER_1, PLAYER_2, graphics=False, echo=False)
+        play_game(PLAYER_1, PLAYER_2, graphics=True, echo=True)
 
     ft.report_game_metrics()

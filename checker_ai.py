@@ -5,6 +5,15 @@ import time
 import copy
 import function_timer as ft
 
+# Maximum moves to look ahead
+MAX_RECURSION_DEPTH = 2
+# Note, if we assume that each player has 8 moves availble
+# on any given turn, eval_move will be run 8*8*8 = 512 times
+# for a recursion depth of 3. For a recursion depth of 4,
+# eval move is run 4096 times. since eval_move takes about 2 ms
+# to run, a recursion depth of 4 means it will take 8 seconds
+# to pick each move. Increase this number with caution!
+
 def print_turn_eval(game, board):
     """Print basic info prior to evaluating which move to make."""
     moves_available = len(board.get_legal_moves())
@@ -40,7 +49,7 @@ def score_moves(game, board, echo):
     legal_moves = board.get_legal_moves()
     scored_moves = dict()
     for possible_move in legal_moves:
-        success_chance = eval_move(possible_move, game, board, echo)
+        success_chance = eval_move(possible_move, game, board, echo=echo)
         if success_chance != 0 and success_chance is not None:
             if success_chance not in scored_moves:
                 scored_moves[success_chance] = [possible_move]
@@ -68,7 +77,7 @@ def pick_best_move(game, board, echo=False):
     if echo:
         print_turn_eval(game, board)
 
-    scored_moves = score_moves(game, board, echo)
+    scored_moves = score_moves(game, board, echo=echo)
 
     if echo:
         print('SUMMARY:')
@@ -92,7 +101,7 @@ def pick_best_move(game, board, echo=False):
     # if two or more moves have the same score, pick randomly betweent them.
     return random.choice(scored_moves[best_score])
 
-def eval_move(move, game, board, echo=False):
+def eval_move(move, game, board, recursion_depth=1, echo=False):
     """Function to evaluate the probability of a move
     leading to a successful outcome."""
     t_start = time.time()
@@ -236,36 +245,41 @@ def calculate_score(move):
     """
     score = 5 # DEFAULT SCORE
 
-    AI_MULTIPLIERS = {\
-        'moves_available': 1,\
-        'move_num': 1,\
-        'num_pieces_self': 1,\
-        'num_pieces_opp': 1,\
-        'num_kings_self': 1,\
-        'num_kings_opp': 1,\
-        'makes_king': 1.5,\
-        'takes_king': 1.5,\
-        'num_resulting_moves': 0.5,\
-        'self_pieces_threatened': 0.25,\
-        'num_threats': 0.25}
+    # AI_MULTIPLIERS = {\
+    #     'moves_available': 1,\
+    #     'move_num': 1,\
+    #     'num_pieces_self': 1,\
+    #     'num_pieces_opp': 1,\
+    #     'num_kings_self': 1,\
+    #     'num_kings_opp': 1,\
+    #     'makes_king': 1.5,\
+    #     'takes_king': 1.5,\
+    #     'num_resulting_moves': 0.5,\
+    #     'self_pieces_threatened': 0.25,\
+    #     'num_threats': 0.25}
+
+    MAKE_KING = 1.5
+    TAKE_KING = 1.5
+    PCS_THREATENED = 0.25
+    NUM_THREATS = 0.25
+    OPP_MOVES = 0.5
 
     if move.makes_king:
-        score = score * AI_MULTIPLIERS['makes_king']
+        score = score * MAKE_KING
 
     if move.takes_king:
-        score = score * AI_MULTIPLIERS['takes_king']
+        score = score * TAKE_KING
 
     if move.self_pieces_threatened != 0:
-        score = score * AI_MULTIPLIERS['self_pieces_threatened'] \
+        score = score * PCS_THREATENED \
             / move.self_pieces_threatened
 
     if move.num_threats != 0:
-        score = score * AI_MULTIPLIERS['num_threats'] \
+        score = score * NUM_THREATS \
             / move.num_threats
 
     if move.opp_resulting_moves != 0 and move.num_threats == 0:
-        score = score / AI_MULTIPLIERS['num_resulting_moves'] \
-            / move.opp_resulting_moves
+        score = score / OPP_MOVES / move.opp_resulting_moves
 
     # if the evaluator of this move will get to go again:
     if move.self_resulting_moves != 0:
