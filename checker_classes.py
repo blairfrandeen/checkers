@@ -487,9 +487,9 @@ class Configuration:
             for position in self.positions.values():
                 if position.player != self.turn:
                     continue
-                if not position.is_king:
-                    move_vectors = move_vectors[:2]
-                for vector in move_vectors:
+                directions = move_vectors[:2] if not position.is_king \
+                    else move_vectors
+                for vector in directions:
                     position_to_try = position + multiplier * vector
                     move_to_try = Move(position, position_to_try)
                     if self.is_legal_move(move_to_try) and move_to_try.is_valid():

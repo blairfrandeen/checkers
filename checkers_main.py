@@ -8,7 +8,7 @@ from checker_classes import Configuration, Position
 from checker_ai import pick_best_move
 import function_timer as ft
 
-PLAYER_1 = {'color': 'Black', 'name': 'Blair', 'control': 'Beard'}
+PLAYER_1 = {'color': 'Black', 'name': 'Blair', 'control': 'Human'}
 PLAYER_2 = {'color': 'Red', 'name': 'Kivo', 'control': 'AI'}
 PLAYERS = {1: PLAYER_1, 2: PLAYER_2}
 
@@ -53,7 +53,7 @@ def check_end_condition(config, echo=False):
     """Check to see if any of the end game conditions have been met."""
     # legal_moves = board.legal_moves
     # if no legal moves available, other player wins.
-    if not config.legal_moves:
+    if len(config.legal_moves) == 0:
         if echo:
             print('No More Legal Moves!')
         end_game(config, config.next_turn())
@@ -69,9 +69,10 @@ def check_end_condition(config, echo=False):
     if config.draw_counter >= MAX_DRAW_COUNT:
         piece_diff = abs(config.pieces_remaining[1] - config.pieces_remaining[2])
         if piece_diff <= MAX_DRAW_PIECE_DIFF:
-            print('Draw Counter Reached!')
+            if echo:
+                print('Draw Counter Reached!')
             end_game(config, winner=None)
-        return True
+            return True
 
     return False
 
@@ -89,7 +90,7 @@ def play_game(players, graphics=True, echo=False):
         if graphics:
             checker_graphics.draw_board(board, GRAPHICS_WINDOW)
 
-        if check_end_condition(board):
+        if check_end_condition(board, echo=True):
             break
 
         #### GET INPUT MOVE FROM HUMAN OR AI
@@ -127,6 +128,7 @@ def play_game(players, graphics=True, echo=False):
                 # GRAPHICS_WINDOW.getMouse()
                 time.sleep(checker_graphics.TIME_STEP)
     if graphics:
+        GRAPHICS_WINDOW.getMouse()
         GRAPHICS_WINDOW.close()
 
 

@@ -14,6 +14,11 @@ MAX_RECURSION_DEPTH = 2
 # to run, a recursion depth of 4 means it will take 8 seconds
 # to pick each move. Increase this number with caution!
 
+# If true, AI will not make a move that results in a config that
+# has already been seen. May lead to draws or AI losses which are
+# unnecessary, since not all possible threads will be played out.
+IGNORE_REPEAT_CONFIGS = True
+
 def print_turn_eval(config):
     """Print basic info prior to evaluating which move to make."""
     print('TURN # %d EVALUATION (%s):' % \
@@ -89,6 +94,9 @@ def eval_move(move, config, echo=False):
     """Function to evaluate the probability of a move
     leading to a successful outcome."""
     t_start = time.time()
+    if echo:
+        print(move)
+
     # make a copy of the existing board, and execute the move
     # under consideration
     result_config = copy.deepcopy(config)
@@ -97,11 +105,12 @@ def eval_move(move, config, echo=False):
     # check if the resulting board has already been seen before
     # on this players turn. If it has, do a different move
     # this helps to avoid infinite loops that should be a draw
-    # result_int = result_board.int_rep()
-    # if result_int in game.board_history[result_board.turn]:
-    #     if echo:
+    # if IGNORE_REPEAT_CONFIGS:
+    #     result_int = config.
+    #     if result_int in config.history:
+    #         # if echo:
     #         print("eval_move: Already seen this configuration.")
-    #     return None
+    #         return None
 
     # number of moves to choose between
     move.num_options = len(config.legal_moves)
@@ -109,11 +118,13 @@ def eval_move(move, config, echo=False):
     # how far are we into the game
     move.turn_num = config.num_moves
 
-    if echo:
-        print(move)
-
+    # how many options result from this move
     move.num_result_options = len(result_config.legal_moves)
-    if result_config.turn == config.turn: # if evaluator will move again
+
+    # NOTE: if move.is_jump(), current player goes again.
+
+    # check if this is a winning or losing move.
+    if move.is_jump(): # if evaluator will move again
         if move.num_result_options == 0:
             if echo:
                 print('This move would lose the game.')
@@ -215,33 +226,38 @@ def calculate_score(move):
     #     'self_pieces_threatened': 0.25,\
     #     'num_threats': 0.25}
 
-    MAKE_KING = 1.1
-    TAKE_KING = 1.2
-    PCS_THREATENED = 0.25
+    ### INCREASE SCORE FOR DECREASED OPP MOVES
+    MAKE_KING = 0.1
+    TAKE_KING = 0.15
+    MULT_JUMP = 0.2
+    PCS_THREATENED = 0.1
     NUM_THREATS = 0.25
-    OPP_MOVES = 0.5
+    NUM_RES_OPT = 0.05
 
     if move.makes_king:
-        score = score * MAKE_KING
+        score = score + MAKE_KING
 
     if move.takes_king:
-        score = score * TAKE_KING
+        score = score + TAKE_KING
 
     if move.self_pieces_threatened != 0:
-        score = score * PCS_THREATENED * move.self_pieces_threatened
+        score = score - PCS_THREATENED * move.self_pieces_threatened
 
     if move.num_threats != 0:
-        score = score * NUM_THREATS \
-            / move.num_threats
+        score = score * NUM_THREATS / move.num_threats
 
-    # if move.opp_resulting_moves != 0 and move.num_threats == 0:
-    #     score = score / OPP_MOVES / move.opp_resulting_moves
-
-    # if the evaluator of this move will get to go again:
-    # if move.self_resulting_moves != 0:
-    #     if move.forces_jump:
-    #         score = score * 10 * move.self_resulting_moves
-    #     else:
-    #         score = score * move.self_resulting_moves
+    # increase score for more options if current player goes again
+    if move.is_jump:
+        score = score + move.num_result_options * NUM_RES_OPT
+    else:
+        # decrease score for more options if opponent plays next
+        score = score - move.num_result_options * NUM_RES_OPT
+    if move.is_jump() and move.forces_jump:
+        score = score + MULT_JUMP
 
     return score
+
+def alter_score(score, factor):
+    # score must always be between zero and 1
+    # alteration factors shall be between -1 and 1
+    pass
